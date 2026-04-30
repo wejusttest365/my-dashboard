@@ -42,22 +42,25 @@ function SignupForm() {
             const res = await axios.post(`${BASE_URL}/signup`, {
                 name: formData.fullName,
                 email: formData.email,
-                password: formData.password,
+                password: formData.password
             });
 
             setIsError(false);
-            setMessage("Signup successful ✅");
+            setMessage(res.data.message);
+
+            setTimeout(() => {
+                navigate("/login");
+            }, 1000);
 
         } catch (err) {
-
             setIsError(true);
 
             const msg = err.response?.data?.message;
 
-            if (msg && msg.includes("exists")) {
+            if (msg === "User already exists") {
                 setMessage("Account already exists. Please login 👉");
             } else {
-                setMessage("Something went wrong ❌");
+                setMessage(msg || "Something went wrong ❌");
             }
         }
     };
