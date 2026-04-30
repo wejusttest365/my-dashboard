@@ -55,9 +55,9 @@ function SignupForm() {
         } catch (err) {
             setIsError(true);
 
-            const msg = err.response?.data?.message;
+            const msg = err.response?.data?.message || err.response?.data?.error || "";
 
-            if (msg === "User already exists") {
+            if (msg.toLowerCase().includes("exist")) {
                 setMessage("Account already exists. Please login 👉");
             } else {
                 setMessage(msg || "Something went wrong ❌");
