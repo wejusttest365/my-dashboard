@@ -12,6 +12,28 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 
 
+try {
+    const res = await axios.post(`/signup`, {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password
+    })
+    setIsError(false);
+    setMessage("Signup successful ✅");
+
+}
+catch (err) {
+    const backendMsg = err.response?.data?.message;
+
+    // 👉 CUSTOM MESSAGE CONTROL
+    if (backendMsg?.includes("exists")) {
+        setMessage("Account already exists. Please login 👉");
+    } else {
+        setMessage("Something went wrong");
+    }
+
+    setIsError(true);
+}
 
 
 const app = express();
@@ -52,28 +74,7 @@ const User = mongoose.model("User", UserSchema);
 app.get("/", (req, res) => {
     res.send("API is running 🚀");
 })
-// ✅ Signup API
-app.post("/signup", async (req, res) => {
-    console.log("🔥 Signup HIT");
 
-    try {
-        const { name, email, password } = req.body;
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ name, email, password: hashedPassword });
-        await user.save();
-
-        res.json({ message: "Signup working ✅" });
-
-    } catch (err) {
-        console.log("❌ Signup error:", err.message);
-        if (err.code === 11000) {
-            res.status(400).json({ message: "Email already exists" });
-        } else {
-            res.status(500).json({ message: "Signup failed" });
-        }
-    }
-});
 
 // ✅ Login API
 app.post("/login", async (req, res) => {
