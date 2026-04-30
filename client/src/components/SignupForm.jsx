@@ -29,47 +29,42 @@ function SignupForm() {
         return error
     }
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
-        const error = validateField(name, value)
-        setErrors(prev => ({ ...prev, [name]: error }))
-    }
+    const BASE_URL = process.env.REACT_APP_API_URL;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSuccessMessage('');
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSuccessMessage('');
 
-        const newErrors = {};
-        Object.keys(formData).forEach(key => {
-            newErrors[key] = validateField(key, formData[key]);
-        });
+    const newErrors = {};
+    Object.keys(formData).forEach(key => {
+        newErrors[key] = validateField(key, formData[key]);
+    });
 
-        setErrors(newErrors);
+    setErrors(newErrors);
 
-        if (Object.values(newErrors).every(error => !error)) {
-            try {
-                const res = await axios.post(
-                    "http://localhost:5000/signup",
-                    {
-                        name: formData.fullName,   // match backend
-                        email: formData.email,
-                        password: formData.password
-                    }
-                );
+    if (Object.values(newErrors).every(error => !error)) {
+        try {
+            const res = await axios.post(
+                `${BASE_URL}/signup`,
+                {
+                    name: formData.fullName,
+                    email: formData.email,
+                    password: formData.password
+                }
+            );
 
-                setSuccessMessage(res.data.message);
+            setSuccessMessage(res.data.message);
 
-                setTimeout(() => navigate('/login'), 1000);
+            setTimeout(() => navigate('/login'), 1000);
 
-            } catch (err) {
-                console.log(err); // 👈 ADD THIS
-                setSuccessMessage(
-                    err.response?.data?.message || "Something went wrong"
-                );
-            }
+        } catch (err) {
+            console.log(err);
+            setSuccessMessage(
+                err.response?.data?.message || "Something went wrong"
+            );
         }
-    };
+    }
+};
 
     return (
         <div className="form-card">
