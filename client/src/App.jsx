@@ -24,9 +24,9 @@ function App() {
                                     <div className="brand-ring ring-3"></div>
                                 </div>
                                 <div className="brand-copy">
-                                    <p className="brand-eyebrow">STAX FOOD</p>
-                                    <h1>A modern meal signup experience</h1>
-                                    <p className="brand-note">Sign up to start ordering fresh, fast, and delicious meals.</p>
+                                    <p className="brand-eyebrow">Welcome To </p>
+                                    <h1>Web Tool Ocean</h1>
+                                    <p className="brand-note">Sign up to start converting files.</p>
                                 </div>
                             </aside>
                             <main className="form-panel" aria-label="Signup form">
@@ -43,9 +43,11 @@ function App() {
                                     <div className="brand-ring ring-3"></div>
                                 </div>
                                 <div className="brand-copy">
-                                    <p className="brand-eyebrow">STAX FOOD</p>
-                                    <h1>A modern meal login experience</h1>
-                                    <p className="brand-note">Login to start ordering fresh, fast, and delicious meals.</p>
+                                    <p className="brand-eyebrow">Welcome To </p>
+                                    <h1>Web Tool Ocean</h1>
+                                    <p className="brand-note">Login up to start converting files.</p>
+
+
                                 </div>
                             </aside>
                             <main className="form-panel" aria-label="Login form">

@@ -10,6 +10,10 @@ function SignupForm() {
         email: '',
         password: ''
     })
+    const [message, setMessage] = useState("");
+    const [isError, setIsError] = useState(false);
+
+
     const [errors, setErrors] = useState({})
     const [showPassword, setShowPassword] = useState(false)
     const [successMessage, setSuccessMessage] = useState('')
@@ -29,37 +33,31 @@ function SignupForm() {
         return error
     }
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+    const BASE_URL = import.meta.env.VITE_API_URL;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSuccessMessage('');
 
-        const newErrors = {};
-        Object.keys(formData).forEach(key => {
-            newErrors[key] = validateField(key, formData[key]);
-        });
+        try {
+            const res = await axios.post(`${BASE_URL}/signup`, {
+                name: formData.fullName,
+                email: formData.email,
+                password: formData.password,
+            });
 
-        setErrors(newErrors);
+            setIsError(false);
+            setMessage("Signup successful ✅");
 
-        if (Object.values(newErrors).every(error => !error)) {
-            try {
-               const res = await axios.post(`${BASE_URL}/signup`, {
-                        name: formData.fullName,
-                        email: formData.email,
-                        password: formData.password
-                    }
-                );
+        } catch (err) {
 
-                setSuccessMessage(res.data.message);
+            setIsError(true);
 
-                setTimeout(() => navigate('/login'), 1000);
+            const msg = err.response?.data?.message;
 
-            } catch (err) {
-                console.log(err);
-                setSuccessMessage(
-                    err.response?.data?.message || "Something went wrong"
-                );
+            if (msg && msg.includes("exists")) {
+                setMessage("Account already exists. Please login 👉");
+            } else {
+                setMessage("Something went wrong ❌");
             }
         }
     };
@@ -78,9 +76,16 @@ const BASE_URL = import.meta.env.VITE_API_URL;
                 <p>Sign Up to Get Started</p>
             </div>
 
+            {message && (
+                <div className={` mt-2 alert ${isError ? "alert-danger" : "alert-success"}`}>
+                    {message}
+                </div>
+
+            )}
+
             <form onSubmit={handleSubmit}>
-                <label className="input-group">
-                    <span className="input-label">Full Name</span>
+                <label className="d-block mt-3">
+                    {/* <span className="input-label">Full Name</span> */}
                     <div className="input-field">
                         <span className="input-icon">👤</span>
                         <input
@@ -96,8 +101,8 @@ const BASE_URL = import.meta.env.VITE_API_URL;
                     <p className="error-message">{errors.fullName}</p>
                 </label>
 
-                <label className="input-group">
-                    <span className="input-label">Email Address</span>
+                <label className="d-block">
+                    {/* <span className="input-label">Email Address</span> */}
                     <div className="input-field">
                         <span className="input-icon">✉️</span>
                         <input
@@ -113,8 +118,8 @@ const BASE_URL = import.meta.env.VITE_API_URL;
                     <p className="error-message">{errors.email}</p>
                 </label>
 
-                <label className="input-group">
-                    <span className="input-label">Password</span>
+                <label className="d-block">
+                    {/* <span className="input-label">Password</span> */}
                     <div className="input-field">
                         <span className="input-icon">🔒</span>
                         <input
@@ -128,9 +133,9 @@ const BASE_URL = import.meta.env.VITE_API_URL;
                         />
                     </div>
                     <p className="error-message">{errors.password}</p>
-                </label>
+                </label >
 
-                <div className="checkbox-row">
+                <div className="checkbox-row mt-0">
                     <label className="show-password">
                         <input
                             type="checkbox"
@@ -142,11 +147,11 @@ const BASE_URL = import.meta.env.VITE_API_URL;
                 </div>
 
                 <button className="cta-button" type="submit">Register</button>
-                <p className="form-footnote">Already have an account? <Link to="/login">Login</Link></p>
-            </form>
+                <p className="form-footnote text-center">Already have an account? <Link to="/login">Login</Link></p>
+            </form >
 
             <div className="form-success">{successMessage}</div>
-        </div>
+        </div >
     )
 }
 

@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import React from "react";
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
-
+import { Link, useNavigate } from 'react-router-dom'
+const BASE_URL = import.meta.env.VITE_API_URL;
 function LoginForm() {
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     })
+    const [message, setMessage] = useState("");
+    const [isError, setIsError] = useState(false);
+
+
     const [errors, setErrors] = useState({})
     const [showPassword, setShowPassword] = useState(false)
     const [successMessage, setSuccessMessage] = useState('')
@@ -45,15 +49,16 @@ function LoginForm() {
 
         if (Object.values(newErrors).every(error => !error)) {
             try {
-                const res = await axios.post(
-                    "http://localhost:5000/login",
+                const res = await axios.post(`${BASE_URL}/login`,
                     {
                         email: formData.email,
                         password: formData.password
                     }
                 );
+                setIsError(false);
+                setMessage("Login successful ✅");
 
-                setSuccessMessage(res.data.message);
+                // setSuccessMessage(res.data.message);
 
                 // Store user data
                 localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -61,10 +66,22 @@ function LoginForm() {
                 setTimeout(() => navigate('/dashboard'), 1000);
 
             } catch (err) {
-                console.log(err);
-                setSuccessMessage(
-                    err.response?.data?.message || "Login failed"
-                );
+                setIsError(true);
+
+                const msg = err.response?.data?.message;
+
+                if (msg && msg.includes("exists")) {
+                    setMessage("Login Successful ✅");
+                } else {
+                    setMessage("Login failed. Try again. ❌");
+                }
+
+
+                // if (msg && msg.includes("Invalid")) {
+                //     setSuccessMessage("Wrong email or password ❌");
+                // } else {
+                //     setSuccessMessage("Login failed. Try again.");
+                // }
             }
         }
     };
@@ -72,13 +89,19 @@ function LoginForm() {
     return (
         <div className="form-card">
             <div className="form-header">
-                <h2>Welcome Back!</h2>
+                <h2>User Login!</h2>
                 <p>Login to Your Account</p>
             </div>
+            {message && (
+                <div className={` mt-2 alert ${isError ? "alert-danger" : "alert-success"}`}>
+                    {message}
+                </div>
+
+            )}
 
             <form onSubmit={handleSubmit}>
-                <label className="input-group">
-                    <span className="input-label">Email Address</span>
+                <label className="d-block mt-3">
+                    {/* <span className="input-label">Email Address</span> */}
                     <div className="input-field">
                         <span className="input-icon">✉️</span>
                         <input
@@ -94,8 +117,8 @@ function LoginForm() {
                     <p className="error-message">{errors.email}</p>
                 </label>
 
-                <label className="input-group">
-                    <span className="input-label">Password</span>
+                <label className="d-block">
+                    {/* <span className="input-label">Password</span> */}
                     <div className="input-field">
                         <span className="input-icon">🔒</span>
                         <input
@@ -111,7 +134,7 @@ function LoginForm() {
                     <p className="error-message">{errors.password}</p>
                 </label>
 
-                <div className="checkbox-row">
+                <div className="checkbox-row mt-0">
                     <label className="show-password">
                         <input
                             type="checkbox"
@@ -123,7 +146,7 @@ function LoginForm() {
                 </div>
 
                 <button className="cta-button" type="submit">Login</button>
-                <p className="form-footnote">Don't have an account? <a href="/">Sign Up</a></p>
+                <p className="form-footnote">Don't have an account? <Link to="/">Sign Up</Link></p>
             </form>
 
             <div className="form-success">{successMessage}</div>
