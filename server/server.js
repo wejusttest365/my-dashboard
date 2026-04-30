@@ -26,9 +26,7 @@ app.use(express.json());
 //     .then(() => console.log("MongoDB connected"))
 //     .catch((err) => console.log(err));
 
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.log(err));
+
 
 // ✅ Schema
 const UserSchema = new mongoose.Schema({
@@ -50,12 +48,14 @@ const User = mongoose.model("User", UserSchema);
 //     console.log("🔥 TEST HIT");
 //     res.send("OK");
 // });
-
+// ✅ Root route (NEW ADD)
+app.get("/", (req, res) => {
+    res.send("API is running 🚀");
+})
 // ✅ Signup API
-// app.post("/signup", async (req, res) => {
-//     console.log("🔥 Signup HIT");
-app.post("/", async (req, res) => {
-    console.log("API Running");
+app.post("/signup", async (req, res) => {
+    console.log("🔥 Signup HIT");
+
     try {
         const { name, email, password } = req.body;
 
@@ -164,6 +164,8 @@ app.post("/metrics/:email", async (req, res) => {
 // app.listen(5000, () => {
 //     console.log("Server running on http://localhost:5000");
 // });
+
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
