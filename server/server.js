@@ -22,7 +22,11 @@ app.use(cors({
 app.use(express.json());
 
 // ✅ Connect MongoDB (local)
-mongoose.connect("mongodb+srv://wejusttest365_db_user:th4C9Iv0buDY1m4v@cluster0.xurandz.mongodb.net/myapp?retryWrites=true&w=majority")
+// mongoose.connect("mongodb+srv://wejusttest365_db_user:th4C9Iv0buDY1m4v@cluster0.xurandz.mongodb.net/myapp?retryWrites=true&w=majority")
+//     .then(() => console.log("MongoDB connected"))
+//     .catch((err) => console.log(err));
+
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB connected"))
     .catch((err) => console.log(err));
 
@@ -48,9 +52,10 @@ const User = mongoose.model("User", UserSchema);
 // });
 
 // ✅ Signup API
-app.post("/signup", async (req, res) => {
-    console.log("🔥 Signup HIT");
-
+// app.post("/signup", async (req, res) => {
+//     console.log("🔥 Signup HIT");
+app.post("/", async (req, res) => {
+    console.log("API Running");
     try {
         const { name, email, password } = req.body;
 
