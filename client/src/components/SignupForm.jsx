@@ -33,7 +33,8 @@ function SignupForm() {
         return error
     }
 
-    const BASE_URL = import.meta.env.VITE_API_URL;
+
+    const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -46,7 +47,7 @@ function SignupForm() {
             });
 
             setIsError(false);
-            setMessage(res.data.message || "Signup successful ✅");
+            setMessage(res.data.message);
 
             setTimeout(() => {
                 navigate("/login");
@@ -55,19 +56,14 @@ function SignupForm() {
         } catch (err) {
             setIsError(true);
 
-            // 🔥 SAFE ERROR EXTRACTION
             const rawMsg =
                 err.response?.data?.message ||
                 err.response?.data?.error ||
                 err.message ||
                 "";
 
-            // 🔥 FORCE STRING (prevents toLowerCase crash)
             const msg = String(rawMsg);
 
-            console.log("Signup error:", err.response?.data);
-
-            // 🔥 SAFE CHECK
             if (msg.toLowerCase().includes("exist")) {
                 setMessage("Account already exists. Please login 👉");
             } else {
@@ -75,6 +71,7 @@ function SignupForm() {
             }
         }
     };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({

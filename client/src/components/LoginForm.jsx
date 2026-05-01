@@ -36,6 +36,8 @@ function LoginForm() {
         setErrors(prev => ({ ...prev, [name]: error }))
     }
 
+    const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSuccessMessage('');
@@ -49,18 +51,14 @@ function LoginForm() {
 
         if (Object.values(newErrors).every(error => !error)) {
             try {
-                const res = await axios.post(`${BASE_URL}/login`,
-                    {
-                        email: formData.email,
-                        password: formData.password
-                    }
-                );
+                const res = await axios.post(`${BASE_URL}/login`, {
+                    email: formData.email,
+                    password: formData.password
+                });
+
                 setIsError(false);
-                setMessage("Login successful ✅");
+                setMessage(res.data.message);
 
-                // setSuccessMessage(res.data.message);
-
-                // Store user data
                 localStorage.setItem('user', JSON.stringify(res.data.user));
 
                 setTimeout(() => navigate('/dashboard'), 1000);
@@ -68,24 +66,22 @@ function LoginForm() {
             } catch (err) {
                 setIsError(true);
 
-                const msg = err.response?.data?.message;
+                const rawMsg =
+                    err.response?.data?.message ||
+                    err.response?.data?.error ||
+                    err.message ||
+                    "";
 
-                if (msg && msg.includes("exists")) {
-                    setMessage("Login Successful ✅");
+                const msg = String(rawMsg);
+
+                if (msg.toLowerCase().includes("invalid")) {
+                    setMessage("Wrong email or password ❌");
                 } else {
-                    setMessage("Login failed. Try again. ❌");
+                    setMessage("Login failed. Try again ❌");
                 }
-
-
-                // if (msg && msg.includes("Invalid")) {
-                //     setSuccessMessage("Wrong email or password ❌");
-                // } else {
-                //     setSuccessMessage("Login failed. Try again.");
-                // }
             }
         }
     };
-
     return (
         <div className="form-card">
             <div className="form-header">
