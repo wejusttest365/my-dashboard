@@ -8,8 +8,23 @@ import ImageResize from './components/ImageResize'
 import ImageCrop from './components/ImageCrop'
 import PDFMerger from './components/PDFMerger'
 import React from 'react'
+import { useEffect } from 'react'
 import './style.css'
+useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
 
+    const name = params.get("name");
+    const email = params.get("email");
+
+    if (name && email) {
+        const user = { name, email };
+
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // clean URL
+        window.history.replaceState({}, document.title, "/");
+    }
+}, []);
 function App() {
     return (
         <Router>
