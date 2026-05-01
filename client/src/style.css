@@ -1066,6 +1066,7 @@ a {
 
 .invalid {
   border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.05) !important;
 }
 
 .checkbox-row {

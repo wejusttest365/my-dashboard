@@ -98,7 +98,7 @@ function LoginForm() {
             <form onSubmit={handleSubmit}>
                 <label className="d-block mt-3">
                     {/* <span className="input-label">Email Address</span> */}
-                    <div className="input-field">
+                    <div className={`input-field ${errors.email ? 'invalid' : ''}`}>
                         <span className="input-icon">✉️</span>
                         <input
                             name="email"
@@ -107,7 +107,7 @@ function LoginForm() {
                             value={formData.email}
                             onChange={handleInputChange}
                             autoComplete="email"
-                            required
+                        //  required
                         />
                     </div>
                     <p className="error-message">{errors.email}</p>
@@ -115,7 +115,7 @@ function LoginForm() {
 
                 <label className="d-block">
                     {/* <span className="input-label">Password</span> */}
-                    <div className="input-field">
+                    <div className={`input-field ${errors.password ? 'invalid' : ''}`}>
                         <span className="input-icon">🔒</span>
                         <input
                             name="password"
@@ -124,7 +124,7 @@ function LoginForm() {
                             value={formData.password}
                             onChange={handleInputChange}
                             autoComplete="current-password"
-                            required
+                        // required
                         />
                     </div>
                     <p className="error-message">{errors.password}</p>

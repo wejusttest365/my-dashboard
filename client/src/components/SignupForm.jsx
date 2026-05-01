@@ -29,6 +29,8 @@ function SignupForm() {
             error = 'Enter a valid email address.'
         } else if (name === 'password' && value.trim().length < 6) {
             error = 'Password must be at least 6 characters.'
+        } else if (name === 'name' && value.trim().length < 2) {
+            error = 'Name must be at least 2 characters.'
         }
         return error
     }
@@ -36,48 +38,65 @@ function SignupForm() {
 
     const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        try {
-            const res = await axios.post(`${BASE_URL}/signup`, {
-                name: formData.fullName,
-                email: formData.email,
-                password: formData.password,
-            });
-
-            setIsError(false);
-            setMessage(res.data.message);
-
-            setTimeout(() => {
-                navigate("/login");
-            }, 1000);
-
-        } catch (err) {
-            setIsError(true);
-
-            const rawMsg =
-                err.response?.data?.message ||
-                err.response?.data?.error ||
-                err.message ||
-                "";
-
-            const msg = String(rawMsg);
-
-            if (msg.toLowerCase().includes("exist")) {
-                setMessage("Account already exists. Please login 👉");
-            } else {
-                setMessage(msg || "Something went wrong ❌");
-            }
-        }
-    };
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+
+        // Validate field on change
+        const fieldName = name === 'fullName' ? 'name' : name;
+        const error = validateField(fieldName, value);
+        setErrors(prev => ({ ...prev, [name]: error }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSuccessMessage('');
+
+        const newErrors = {};
+        Object.keys(formData).forEach(key => {
+            const fieldName = key === 'fullName' ? 'name' : key;
+            newErrors[key] = validateField(fieldName, formData[key]);
+        });
+
+        setErrors(newErrors);
+
+        // Check if there are any errors
+        if (Object.values(newErrors).every(error => !error)) {
+            try {
+                const res = await axios.post(`${BASE_URL}/signup`, {
+                    name: formData.fullName,
+                    email: formData.email,
+                    password: formData.password,
+                });
+
+                setIsError(false);
+                setMessage(res.data.message);
+
+                setTimeout(() => {
+                    navigate("/login");
+                }, 1000);
+
+            } catch (err) {
+                setIsError(true);
+
+                const rawMsg =
+                    err.response?.data?.message ||
+                    err.response?.data?.error ||
+                    err.message ||
+                    "";
+
+                const msg = String(rawMsg);
+
+                if (msg.toLowerCase().includes("exist")) {
+                    setMessage("Account already exists. Please login 👉");
+                } else {
+                    setMessage(msg || "Something went wrong ❌");
+                }
+            }
+        }
     };
 
     return (
@@ -97,7 +116,7 @@ function SignupForm() {
             <form onSubmit={handleSubmit}>
                 <label className="d-block mt-3">
                     {/* <span className="input-label">Full Name</span> */}
-                    <div className="input-field">
+                    <div className={`input-field ${errors.fullName ? 'invalid' : ''}`}>
                         <span className="input-icon">👤</span>
                         <input
                             name="fullName"
@@ -106,7 +125,7 @@ function SignupForm() {
                             value={formData.fullName}
                             onChange={handleInputChange}
                             autoComplete="name"
-                            required
+                        //  required
                         />
                     </div>
                     <p className="error-message">{errors.fullName}</p>
@@ -114,7 +133,7 @@ function SignupForm() {
 
                 <label className="d-block">
                     {/* <span className="input-label">Email Address</span> */}
-                    <div className="input-field">
+                    <div className={`input-field ${errors.email ? 'invalid' : ''}`}>
                         <span className="input-icon">✉️</span>
                         <input
                             name="email"
@@ -123,7 +142,7 @@ function SignupForm() {
                             value={formData.email}
                             onChange={handleInputChange}
                             autoComplete="email"
-                            required
+                        //required
                         />
                     </div>
                     <p className="error-message">{errors.email}</p>
@@ -131,7 +150,7 @@ function SignupForm() {
 
                 <label className="d-block">
                     {/* <span className="input-label">Password</span> */}
-                    <div className="input-field">
+                    <div className={`input-field ${errors.password ? 'invalid' : ''}`}>
                         <span className="input-icon">🔒</span>
                         <input
                             name="password"
@@ -140,7 +159,7 @@ function SignupForm() {
                             value={formData.password}
                             onChange={handleInputChange}
                             autoComplete="new-password"
-                            required
+                        //required
                         />
                     </div>
                     <p className="error-message">{errors.password}</p>

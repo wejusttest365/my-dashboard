@@ -68,13 +68,29 @@ app.post("/signup", async (req, res) => {
 
         const hashed = await bcrypt.hash(password, 10);
 
-        await User.create({ name, email, password: hashed });
+        await User.create({
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            password: hashed,
+            metrics: {
+                convertedImages: 0,
+                compressedImages: 0,
+                totalSavedBytes: 0
+            }
+        });
 
         return res.status(201).json({ message: "Signup successful" });
 
     } catch (err) {
-        console.log("SIGNUP ERROR:", err);
-        return res.status(500).json({ message: "Server error" });
+        console.log("SIGNUP ERROR:", err.message);
+        console.log("ERROR STACK:", err.stack);
+
+        // Handle specific errors
+        if (err.code === 11000) {
+            return res.status(409).json({ message: "Email already exists" });
+        }
+
+        return res.status(500).json({ message: "Server error during signup" });
     }
 });
 
@@ -111,6 +127,16 @@ app.post("/login", async (req, res) => {
 /* ---------------- ROOT ---------------- */
 app.get("/", (req, res) => {
     res.send("API running 🚀");
+});
+
+/* ---------------- TEST ENDPOINT ---------------- */
+app.get("/test", (req, res) => {
+    res.json({
+        status: "OK",
+        message: "Server is running",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development"
+    });
 });
 
 /* ---------------- HEALTH CHECK ---------------- */
