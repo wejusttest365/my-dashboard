@@ -82,112 +82,72 @@ function LoginForm() {
     };
 
 
-    const newErrors = {};
-    Object.keys(formData).forEach(key => {
-        newErrors[key] = validateField(key, formData[key]);
-    });
-
-    setErrors(newErrors);
-
-    if (Object.values(newErrors).every(error => !error)) {
-        try {
-            const res = await axios.post(`${BASE_URL}/login`, {
-                email: formData.email,
-                password: formData.password
-            });
-
-            setIsError(false);
-            setMessage(res.data.message);
-
-            localStorage.setItem('user', JSON.stringify(res.data.user));
-
-            setTimeout(() => navigate('/dashboard'), 1000);
-
-        } catch (err) {
-            setIsError(true);
-
-            const rawMsg =
-                err.response?.data?.message ||
-                err.response?.data?.error ||
-                err.message ||
-                "";
-
-            const msg = String(rawMsg);
-
-            if (msg.toLowerCase().includes("invalid")) {
-                setMessage("Wrong email or password ❌");
-            } else {
-                setMessage("Login failed. Try again ❌");
-            }
-        }
-    }
-};
-return (
-    <div className="form-card">
-        <div className="form-header">
-            <h2>Users Login!</h2>
-            <p>Login to Your Account</p>
-        </div>
-        {message && (
-            <div className={` mt-2 alert ${isError ? "alert-danger" : "alert-success"}`}>
-                {message}
+    return (
+        <div className="form-card">
+            <div className="form-header">
+                <h2>Users Login!</h2>
+                <p>Login to Your Account</p>
             </div>
-
-        )}
-
-        <form onSubmit={handleSubmit}>
-            <label className="d-block mt-3">
-                {/* <span className="input-label">Email Address</span> */}
-                <div className={`input-field ${errors.email ? 'invalid' : ''}`}>
-                    <span className="input-icon">✉️</span>
-                    <input
-                        name="email"
-                        type="email"
-                        placeholder="Email Address"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        autoComplete="email"
-                    //  required
-                    />
+            {message && (
+                <div className={` mt-2 alert ${isError ? "alert-danger" : "alert-success"}`}>
+                    {message}
                 </div>
-                <p className="error-message">{errors.email}</p>
-            </label>
 
-            <label className="d-block">
-                {/* <span className="input-label">Password</span> */}
-                <div className={`input-field ${errors.password ? 'invalid' : ''}`}>
-                    <span className="input-icon">🔒</span>
-                    <input
-                        name="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        autoComplete="current-password"
-                    // required
-                    />
-                </div>
-                <p className="error-message">{errors.password}</p>
-            </label>
+            )}
 
-            <div className="checkbox-row mt-0">
-                <label className="show-password">
-                    <input
-                        type="checkbox"
-                        checked={showPassword}
-                        onChange={(e) => setShowPassword(e.target.checked)}
-                    />
-                    Show password
+            <form onSubmit={handleSubmit}>
+                <label className="d-block mt-3">
+                    {/* <span className="input-label">Email Address</span> */}
+                    <div className={`input-field ${errors.email ? 'invalid' : ''}`}>
+                        <span className="input-icon">✉️</span>
+                        <input
+                            name="email"
+                            type="email"
+                            placeholder="Email Address"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            autoComplete="email"
+                        //  required
+                        />
+                    </div>
+                    <p className="error-message">{errors.email}</p>
                 </label>
-            </div>
 
-            <button className="cta-button" type="submit">Login</button>
-            <p className="form-footnote">Don't have an account? <Link to="/">Sign Up</Link></p>
-        </form>
+                <label className="d-block">
+                    {/* <span className="input-label">Password</span> */}
+                    <div className={`input-field ${errors.password ? 'invalid' : ''}`}>
+                        <span className="input-icon">🔒</span>
+                        <input
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            autoComplete="current-password"
+                        // required
+                        />
+                    </div>
+                    <p className="error-message">{errors.password}</p>
+                </label>
 
-        <div className="form-success">{successMessage}</div>
-    </div>
-)
+                <div className="checkbox-row mt-0">
+                    <label className="show-password">
+                        <input
+                            type="checkbox"
+                            checked={showPassword}
+                            onChange={(e) => setShowPassword(e.target.checked)}
+                        />
+                        Show password
+                    </label>
+                </div>
+
+                <button className="cta-button" type="submit">Login</button>
+                <p className="form-footnote">Don't have an account? <Link to="/">Sign Up</Link></p>
+            </form>
+
+            <div className="form-success">{successMessage}</div>
+        </div>
+    )
 }
 
 export default LoginForm
