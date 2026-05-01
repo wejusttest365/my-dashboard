@@ -89,7 +89,7 @@ function LoginForm() {
     return (
         <div className="form-card">
             <div className="form-header">
-                <h2>User Login!</h2>
+                <h2>Users Login!</h2>
                 <p>Login to Your Account</p>
             </div>
             {message && (
