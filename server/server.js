@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 
 const app = express();
 
+/* ---------------- CORS (FIXED FOR PRE-FLIGHT) ---------------- */
 const allowedOrigins = [
     "http://localhost:5173",
     "https://my-dashboard-six-swart.vercel.app"
@@ -15,15 +16,20 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error("Not allowed by CORS"));
+            callback(null, false); // ❗ don't crash server
         }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
 
+// ✅ IMPORTANT: handle preflight requests
+app.options("*", cors());
+
 app.use(express.json());
 
-// ---------------- MONGO ----------------
+/* ---------------- MONGO (SAFE CONNECTION) ---------------- */
 mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log("MongoDB connected"))
     .catch(err => {
@@ -31,7 +37,7 @@ mongoose.connect(process.env.MONGO_URL)
         process.exit(1);
     });
 
-// ---------------- SCHEMA ----------------
+/* ---------------- SCHEMA ---------------- */
 const UserSchema = new mongoose.Schema({
     name: String,
     email: { type: String, unique: true },
@@ -40,10 +46,12 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-// ---------------- SIGNUP ----------------
+/* ---------------- SIGNUP ---------------- */
 app.post("/signup", async (req, res) => {
     try {
         const { name, email, password } = req.body;
+
+        console.log("SIGNUP HIT:", req.body);
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: "All fields required" });
@@ -62,15 +70,17 @@ app.post("/signup", async (req, res) => {
         res.status(201).json({ message: "Signup successful" });
 
     } catch (err) {
-        console.log(err);
+        console.log("SIGNUP ERROR:", err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
-// ---------------- LOGIN ----------------
+/* ---------------- LOGIN ---------------- */
 app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        console.log("LOGIN HIT:", req.body);
 
         const user = await User.findOne({ email });
 
@@ -90,17 +100,17 @@ app.post("/login", async (req, res) => {
         });
 
     } catch (err) {
-        console.log(err);
+        console.log("LOGIN ERROR:", err);
         res.status(500).json({ message: "Login failed" });
     }
 });
 
-// ---------------- ROOT ----------------
+/* ---------------- ROOT ---------------- */
 app.get("/", (req, res) => {
     res.send("API running 🚀");
 });
 
-// ---------------- START ----------------
+/* ---------------- START SERVER ---------------- */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
