@@ -5,8 +5,20 @@ const bcrypt = require("bcrypt");
 
 const app = express();
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://my-dashboard-six-swart.vercel.app"
+];
+
 app.use(cors({
-    origin: "*"
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true
 }));
 
 app.use(express.json());
