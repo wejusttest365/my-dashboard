@@ -5,31 +5,23 @@ const bcrypt = require("bcrypt");
 
 const app = express();
 
-/* ---------------- CORS (FIXED FOR PRE-FLIGHT) ---------------- */
-const allowedOrigins = [
-    "http://localhost:5173",
-    "https://my-dashboard-six-swart.vercel.app"
-];
-
+/* ---------------- TRUSTED CORS (NO CRASH VERSION) ---------------- */
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(null, false); // ❗ don't crash server
-        }
-    },
+    origin: [
+        "http://localhost:5173",
+        "https://my-dashboard-six-swart.vercel.app"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
 
-// ✅ IMPORTANT: handle preflight requests
+// IMPORTANT: preflight must be handled BEFORE routes
 app.options("*", cors());
 
 app.use(express.json());
 
-/* ---------------- MONGO (SAFE CONNECTION) ---------------- */
+/* ---------------- MONGO SAFE CONNECT ---------------- */
 mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log("MongoDB connected"))
     .catch(err => {
@@ -37,7 +29,7 @@ mongoose.connect(process.env.MONGO_URL)
         process.exit(1);
     });
 
-/* ---------------- SCHEMA ---------------- */
+/* ---------------- USER MODEL ---------------- */
 const UserSchema = new mongoose.Schema({
     name: String,
     email: { type: String, unique: true },
@@ -49,9 +41,9 @@ const User = mongoose.model("User", UserSchema);
 /* ---------------- SIGNUP ---------------- */
 app.post("/signup", async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        console.log("SIGNUP REQUEST:", req.body);
 
-        console.log("SIGNUP HIT:", req.body);
+        const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: "All fields required" });
@@ -67,20 +59,20 @@ app.post("/signup", async (req, res) => {
 
         await User.create({ name, email, password: hashed });
 
-        res.status(201).json({ message: "Signup successful" });
+        return res.status(201).json({ message: "Signup successful" });
 
     } catch (err) {
         console.log("SIGNUP ERROR:", err);
-        res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: "Server error" });
     }
 });
 
 /* ---------------- LOGIN ---------------- */
 app.post("/login", async (req, res) => {
     try {
-        const { email, password } = req.body;
+        console.log("LOGIN REQUEST:", req.body);
 
-        console.log("LOGIN HIT:", req.body);
+        const { email, password } = req.body;
 
         const user = await User.findOne({ email });
 
@@ -94,14 +86,14 @@ app.post("/login", async (req, res) => {
             return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        res.json({
+        return res.json({
             message: "Login successful",
             user: { name: user.name, email: user.email }
         });
 
     } catch (err) {
         console.log("LOGIN ERROR:", err);
-        res.status(500).json({ message: "Login failed" });
+        return res.status(500).json({ message: "Login failed" });
     }
 });
 
@@ -110,7 +102,7 @@ app.get("/", (req, res) => {
     res.send("API running 🚀");
 });
 
-/* ---------------- START SERVER ---------------- */
+/* ---------------- START ---------------- */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
