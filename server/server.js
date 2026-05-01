@@ -14,37 +14,33 @@ const allowedOrigins = [
     "https://my-dashboard-il25.onrender.com"
 ];
 
-// Preflight handler
-app.options(/.*/, (req, res) => {
-    const origin = req.headers.origin;
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS not allowed'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    optionsSuccessStatus: 204,
+    preflightContinue: false
+};
 
-    if (!origin || allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin || '*');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
-        return res.sendStatus(204);
-    }
-
-    res.sendStatus(403);
-});
-
-// General CORS middleware
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-
-    if (!origin || allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin || '*');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
-        res.setHeader('Vary', 'Origin');
-    }
-
-    next();
-});
-
+const corsMiddleware = cors(corsOptions);
+app.options('*', corsMiddleware);
+app.use(corsMiddleware);
 app.use(express.json());
+
+// CORS error handler
+app.use((err, req, res, next) => {
+    if (err && err.message === 'CORS not allowed') {
+        return res.status(403).json({ message: 'CORS not allowed' });
+    }
+    next(err);
+});
 
 /* ---------------- MONGO SAFE CONNECT ---------------- */
 const mongoUrl = process.env.MONGO_URL || process.env.MONGODB_URI || "mongodb+srv://wejusttest365_db_user:th4C9Iv0buDY1m4v@cluster0.xurandz.mongodb.net/myapp?retryWrites=true&w=majority";
