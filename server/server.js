@@ -12,7 +12,7 @@ app.use(cors({
 app.use(express.json());
 
 // ---------------- MONGO ----------------
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log("MongoDB connected"))
     .catch(err => {
         console.log("DB ERROR:", err);
