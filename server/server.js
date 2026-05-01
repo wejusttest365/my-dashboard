@@ -14,19 +14,31 @@ const allowedOrigins = [
     "https://my-dashboard-il25.onrender.com"
 ];
 
+// Preflight handler
+app.options(/.*/, (req, res) => {
+    const origin = req.headers.origin;
+
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+        return res.sendStatus(204);
+    }
+
+    res.sendStatus(403);
+});
+
+// General CORS middleware
 app.use((req, res, next) => {
     const origin = req.headers.origin;
 
-    if (origin && allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Vary', 'Origin');
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
         res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    }
-
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(204);
+        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+        res.setHeader('Vary', 'Origin');
     }
 
     next();
@@ -63,23 +75,32 @@ const User = mongoose.model("User", UserSchema);
 /* ---------------- SIGNUP ---------------- */
 app.post("/signup", async (req, res) => {
     try {
-        console.log("SIGNUP REQUEST:", req.body);
+        console.log("🔥 SIGNUP REQUEST RECEIVED:", req.body);
 
         const { name, email, password } = req.body;
 
+        // Validation
         if (!name || !email || !password) {
+            console.log("❌ Missing fields:", { name: !!name, email: !!email, password: !!password });
             return res.status(400).json({ message: "All fields required" });
         }
 
-        const exists = await User.findOne({ email });
+        // Check if user exists
+        console.log("🔍 Checking if user exists with email:", email.toLowerCase().trim());
+        const exists = await User.findOne({ email: email.toLowerCase().trim() });
 
         if (exists) {
+            console.log("⚠️ User already exists:", email);
             return res.status(409).json({ message: "User already exists" });
         }
 
+        // Hash password
+        console.log("🔐 Hashing password...");
         const hashed = await bcrypt.hash(password, 10);
 
-        await User.create({
+        // Create new user
+        console.log("📝 Creating new user...");
+        const newUser = new User({
             name: name.trim(),
             email: email.toLowerCase().trim(),
             password: hashed,
@@ -90,48 +111,79 @@ app.post("/signup", async (req, res) => {
             }
         });
 
+        await newUser.save();
+        console.log("✅ User created successfully:", newUser._id);
+
         return res.status(201).json({ message: "Signup successful" });
 
     } catch (err) {
-        console.log("SIGNUP ERROR:", err.message);
-        console.log("ERROR STACK:", err.stack);
+        console.error("❌ SIGNUP ERROR:", err.message);
+        console.error("ERROR DETAILS:", {
+            name: err.name,
+            code: err.code,
+            message: err.message,
+            stack: err.stack
+        });
 
         // Handle specific errors
         if (err.code === 11000) {
             return res.status(409).json({ message: "Email already exists" });
         }
 
-        return res.status(500).json({ message: "Server error during signup" });
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ message: "Invalid data format" });
+        }
+
+        return res.status(500).json({
+            message: "Server error during signup",
+            error: process.env.NODE_ENV === "development" ? err.message : undefined
+        });
     }
 });
 
 /* ---------------- LOGIN ---------------- */
 app.post("/login", async (req, res) => {
     try {
-        console.log("LOGIN REQUEST:", req.body);
+        console.log("🔥 LOGIN REQUEST RECEIVED:", { email: req.body.email, hasPassword: !!req.body.password });
 
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password required" });
+        }
+
+        console.log("🔍 Finding user with email:", email.toLowerCase().trim());
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
 
         if (!user) {
+            console.log("⚠️ User not found:", email);
             return res.status(400).json({ message: "Invalid email or password" });
         }
 
+        console.log("🔐 Comparing passwords...");
         const match = await bcrypt.compare(password, user.password);
 
         if (!match) {
+            console.log("⚠️ Password mismatch for user:", email);
             return res.status(400).json({ message: "Invalid email or password" });
         }
 
+        console.log("✅ Login successful:", user._id);
         return res.json({
             message: "Login successful",
             user: { name: user.name, email: user.email }
         });
 
     } catch (err) {
-        console.log("LOGIN ERROR:", err);
-        return res.status(500).json({ message: "Login failed" });
+        console.error("❌ LOGIN ERROR:", err.message);
+        console.error("ERROR DETAILS:", {
+            name: err.name,
+            message: err.message
+        });
+        return res.status(500).json({
+            message: "Login failed",
+            error: process.env.NODE_ENV === "development" ? err.message : undefined
+        });
     }
 });
 

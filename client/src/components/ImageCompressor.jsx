@@ -222,9 +222,9 @@ function ImageCompressor() {
                         <p>Reduce file size while keeping sharp quality and fast downloads.</p>
                     </div>
                     <div className="header-actions">
-                        <button className="history-link-btn" type="button" onClick={() => setShowHistory((show) => !show)}>
+                        {/* <button className="history-link-btn" type="button" onClick={() => setShowHistory((show) => !show)}>
                             {showHistory ? 'Hide History' : 'Show History'}
-                        </button>
+                        </button> */}
                         <div className="breadcrumb">Home &gt; Image Tools &gt; Compressor</div>
                     </div>
                 </div>

@@ -245,20 +245,20 @@ function ImageConverter() {
                         <p>Convert JPG, PNG, WEBP in seconds with neural-powered precision.</p>
                     </div>
                     <div className="header-actions">
-                        <button className="history-link-btn" type="button" onClick={() => setShowHistory((show) => !show)}>
+                        {/* <button className="history-link-btn" type="button" onClick={() => setShowHistory((show) => !show)}>
                             {showHistory ? 'Hide History' : 'Show History'}
-                        </button>
+                        </button> */}
                         <div className="breadcrumb">Home &gt; Image Tools &gt; Converter</div>
                     </div>
                 </div>
 
                 <div className="converter-grid">
                     <section className="converter-panel">
-                        <div className="history-toolbar">
+                        {/* <div className="history-toolbar">
                             <button className="history-btn" type="button" onClick={() => setShowHistory((show) => !show)}>
                                 {showHistory ? 'Hide History' : 'Show History'}
                             </button>
-                        </div>
+                        </div> */}
                         <div className="upload-card" onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}>
                             <input
                                 ref={inputRef}
