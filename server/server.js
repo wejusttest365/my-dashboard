@@ -11,29 +11,53 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 
+app.post("/signup", async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
 
-try {
-    const res = await axios.post(`/signup`, {
-        name: formData.fullName,
-        email: formData.email,
-        password: formData.password
-    })
-    setIsError(false);
-    setMessage("Signup successful ✅");
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                message: "All fields are required"
+            });
+        }
 
-}
-catch (err) {
-    const backendMsg = err.response?.data?.message;
+        const existingUser = await User.findOne({ email });
 
-    // 👉 CUSTOM MESSAGE CONTROL
-    if (backendMsg?.includes("exists")) {
-        setMessage("Account already exists. Please login 👉");
-    } else {
-        setMessage("Something went wrong");
+        if (existingUser) {
+            return res.status(409).json({
+                message: "User already exists"
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = new User({
+            name,
+            email,
+            password: hashedPassword
+        });
+
+        await newUser.save();
+
+        res.status(201).json({
+            message: "Signup successful"
+        });
+
+    } catch (err) {
+        console.log("SIGNUP ERROR:", err);
+
+        // 🔥 Handle Mongo duplicate error
+        if (err.code === 11000) {
+            return res.status(409).json({
+                message: "User already exists"
+            });
+        }
+
+        res.status(500).json({
+            message: "Server error"
+        });
     }
-
-    setIsError(true);
-}
+});
 
 
 const app = express();
