@@ -183,7 +183,7 @@ app.get("/auth/google",
 app.get("/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/login" }),
     (req, res) => {
-        res.redirect("https://my-dashboard-six-swart.vercel.app/dashboard");
+        res.redirect("https://my-dashboard-six-swart.vercel.app/");
     }
 );
 
