@@ -9,23 +9,34 @@ import ImageCrop from './components/ImageCrop'
 import PDFMerger from './components/PDFMerger'
 import React from 'react'
 import { useEffect } from 'react'
+import { useState } from "react";
 import './style.css'
-useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
 
-    const name = params.get("name");
-    const email = params.get("email");
-
-    if (name && email) {
-        const user = { name, email };
-
-        localStorage.setItem("user", JSON.stringify(user));
-
-        // clean URL
-        window.history.replaceState({}, document.title, "/");
-    }
-}, []);
 function App() {
+    const [user, setUser] = useState(() => {
+        const stored = localStorage.getItem("user");
+        return stored ? JSON.parse(stored) : null;
+    });
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+
+        const name = params.get("name");
+        const email = params.get("email");
+
+        if (name && email) {
+            const user = { name, email };
+
+            localStorage.setItem("user", JSON.stringify(user));
+
+            console.log("✅ Google user saved:", user);
+
+            // URL clean karo
+            window.history.replaceState({}, document.title, "/");
+        }
+    }, []);
+
+
     return (
         <Router>
             <div id="app">
