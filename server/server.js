@@ -185,7 +185,7 @@ app.get("/auth/google/callback",
     (req, res) => {
         const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-        res.redirect(`${FRONTEND_URL}/dashboard?name=${req.user.name}&email=${req.user.email}`);
+        res.redirect(`${FRONTEND_URL}/?name=${req.user.name}&email=${req.user.email}`);
     }
 );
 

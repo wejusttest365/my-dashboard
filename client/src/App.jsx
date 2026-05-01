@@ -40,6 +40,19 @@ function App() {
         setLoading(false);
     }, []);
 
+    // Navigate to dashboard after user is set from Google login
+    useEffect(() => {
+        if (user && window.location.pathname === "/") {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("name") && params.get("email")) {
+                // Give a moment for state to settle, then navigate
+                setTimeout(() => {
+                    window.location.href = "/dashboard";
+                }, 100);
+            }
+        }
+    }, [user]);
+
     // ⛔ IMPORTANT
     if (loading) return <div>Loading...</div>;
 
