@@ -181,16 +181,12 @@ app.get("/auth/google",
 
 // callback
 app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
+    passport.authenticate("google", { failureRedirect: "/login" }),
+    (req, res) => {
+        const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-    const user = req.user;
-
-    // 👇 user data URL me bhejo
-    res.redirect(
-      `https://my-dashboard-six-swart.vercel.app/?name=${user.name}&email=${user.email}`
-    );
-  }
+        res.redirect(`${FRONTEND_URL}/dashboard?name=${req.user.name}&email=${req.user.email}`);
+    }
 );
 
 
