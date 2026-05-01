@@ -1,80 +1,23 @@
-process.on("uncaughtException", (err) => {
-    console.log("❌ UNCAUGHT EXCEPTION:", err);
-});
-
-process.on("unhandledRejection", (err) => {
-    console.log("❌ UNHANDLED PROMISE:", err);
-});
-// server/server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 
-app.post("/signup", async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
+const app = express(); // ✅ MUST BE FIRST
 
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                message: "All fields are required"
-            });
-        }
-
-        const existingUser = await User.findOne({ email });
-
-        if (existingUser) {
-            return res.status(409).json({
-                message: "User already exists"
-            });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newUser = new User({
-            name,
-            email,
-            password: hashedPassword
-        });
-
-        await newUser.save();
-
-        res.status(201).json({
-            message: "Signup successful"
-        });
-
-    } catch (err) {
-        console.log("SIGNUP ERROR:", err);
-
-        // 🔥 Handle Mongo duplicate error
-        if (err.code === 11000) {
-            return res.status(409).json({
-                message: "User already exists"
-            });
-        }
-
-        res.status(500).json({
-            message: "Server error"
-        });
-    }
-});
-
-
-const app = express();
 app.use(cors({
-    origin: true, // Allow all origins
+    origin: true,
     credentials: true
 }));
+
 app.use(express.json());
 
-// ✅ Connect MongoDB (local)
-// mongoose.connect("mongodb+srv://wejusttest365_db_user:th4C9Iv0buDY1m4v@cluster0.xurandz.mongodb.net/myapp?retryWrites=true&w=majority")
-//     .then(() => console.log("MongoDB connected"))
-//     .catch((err) => console.log(err));
+/* ---------------- MONGOOSE CONNECT ---------------- */
+mongoose.connect(process.env.MONGO_URL)
+    .then(() => console.log("MongoDB connected"))
+    .catch(err => console.log("DB error:", err));
 
-
-
-// ✅ Schema
+/* ---------------- SCHEMA ---------------- */
 const UserSchema = new mongoose.Schema({
     name: String,
     email: { type: String, unique: true },
@@ -89,108 +32,76 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
+/* ---------------- SIGNUP ---------------- */
+app.post("/signup", async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
 
-// app.get("/test", (req, res) => {
-//     console.log("🔥 TEST HIT");
-//     res.send("OK");
-// });
-// ✅ Root route (NEW ADD)
-app.get("/", (req, res) => {
-    res.send("API is running 🚀");
-})
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
 
+        const existingUser = await User.findOne({ email });
 
-// ✅ Login API
+        if (existingUser) {
+            return res.status(409).json({ message: "User already exists" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await User.create({
+            name,
+            email,
+            password: hashedPassword
+        });
+
+        res.status(201).json({ message: "Signup successful" });
+
+    } catch (err) {
+        console.log("SIGNUP ERROR:", err);
+
+        if (err.code === 11000) {
+            return res.status(409).json({ message: "User already exists" });
+        }
+
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/* ---------------- LOGIN ---------------- */
 app.post("/login", async (req, res) => {
-    console.log("🔥 Login HIT");
-
     try {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
+
         if (!user) {
             return res.status(400).json({ message: "Invalid email or password" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
+
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        res.json({ message: "Login successful ✅", user: { name: user.name, email: user.email } });
+        res.json({
+            message: "Login successful",
+            user: { name: user.name, email: user.email }
+        });
 
     } catch (err) {
-        console.log("❌ Login error:", err);
+        console.log("LOGIN ERROR:", err);
         res.status(500).json({ message: "Login failed" });
     }
 });
 
-// ✅ Get User Metrics
-app.get("/metrics/:email", async (req, res) => {
-    console.log("🔥 Get Metrics HIT");
-
-    try {
-        const { email } = req.params;
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: "User not found" });
-        }
-
-        res.json({
-            message: "Metrics retrieved ✅",
-            metrics: user.metrics || { convertedImages: 0, compressedImages: 0, totalSavedBytes: 0 }
-        });
-
-    } catch (err) {
-        console.log("❌ Get Metrics error:", err);
-        res.status(500).json({ message: "Failed to retrieve metrics" });
-    }
+/* ---------------- ROOT ---------------- */
+app.get("/", (req, res) => {
+    res.send("API is running 🚀");
 });
 
-// ✅ Update User Metrics
-app.post("/metrics/:email", async (req, res) => {
-    console.log("🔥 Update Metrics HIT");
-
-    try {
-        const { email } = req.params;
-        const { convertedImages, compressedImages, totalSavedBytes } = req.body;
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: "User not found" });
-        }
-
-        // Update metrics
-        if (convertedImages !== undefined) {
-            user.metrics.convertedImages += convertedImages;
-        }
-        if (compressedImages !== undefined) {
-            user.metrics.compressedImages += compressedImages;
-        }
-        if (totalSavedBytes !== undefined) {
-            user.metrics.totalSavedBytes += totalSavedBytes;
-        }
-
-        await user.save();
-
-        res.json({
-            message: "Metrics updated ✅",
-            metrics: user.metrics
-        });
-
-    } catch (err) {
-        console.log("❌ Update Metrics error:", err);
-        res.status(500).json({ message: "Failed to update metrics" });
-    }
-});
-
-// ✅ Start server
-// app.listen(5000, () => {
-//     console.log("Server running on http://localhost:5000");
-// });
-
-
+/* ---------------- SERVER START ---------------- */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
