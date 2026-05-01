@@ -13,10 +13,8 @@ import { useState } from "react";
 import './style.css'
 
 function App() {
-    const [user, setUser] = useState(() => {
-        const stored = localStorage.getItem("user");
-        return stored ? JSON.parse(stored) : null;
-    });
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -25,16 +23,25 @@ function App() {
         const email = params.get("email");
 
         if (name && email) {
-            const user = { name, email };
+            const userData = { name, email };
 
-            localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("user", JSON.stringify(userData));
+            setUser(userData);
 
-            console.log("✅ Google user saved:", user);
-
-            // URL clean karo
+            // clean URL
             window.history.replaceState({}, document.title, "/");
+        } else {
+            const stored = localStorage.getItem("user");
+            if (stored) {
+                setUser(JSON.parse(stored));
+            }
         }
+
+        setLoading(false);
     }, []);
+
+    // ⛔ IMPORTANT
+    if (loading) return <div>Loading...</div>;
 
 
     return (
