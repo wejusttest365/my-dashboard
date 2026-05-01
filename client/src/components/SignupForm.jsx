@@ -42,11 +42,11 @@ function SignupForm() {
             const res = await axios.post(`${BASE_URL}/signup`, {
                 name: formData.fullName,
                 email: formData.email,
-                password: formData.password
+                password: formData.password,
             });
 
             setIsError(false);
-            setMessage(res.data.message);
+            setMessage(res.data.message || "Signup successful ✅");
 
             setTimeout(() => {
                 navigate("/login");
@@ -55,8 +55,19 @@ function SignupForm() {
         } catch (err) {
             setIsError(true);
 
-            const msg = err.response?.data?.message || err.response?.data?.error || "";
+            // 🔥 SAFE ERROR EXTRACTION
+            const rawMsg =
+                err.response?.data?.message ||
+                err.response?.data?.error ||
+                err.message ||
+                "";
 
+            // 🔥 FORCE STRING (prevents toLowerCase crash)
+            const msg = String(rawMsg);
+
+            console.log("Signup error:", err.response?.data);
+
+            // 🔥 SAFE CHECK
             if (msg.toLowerCase().includes("exist")) {
                 setMessage("Account already exists. Please login 👉");
             } else {
