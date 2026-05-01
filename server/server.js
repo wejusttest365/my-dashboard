@@ -121,12 +121,14 @@ app.get("/health", (req, res) => {
     res.json({ status: "OK" });
 });
 
-
+console.log("CALLBACK URL 👉", process.env.BASE_URL + "/auth/google/callback");
 /* ---------------- google auth config ---------------- */
 
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const session = require("express-session");
+
+app.set("trust proxy", 1);
 
 app.use(session({
     secret: "secretkey",
@@ -142,7 +144,7 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
+    callbackURL: "https://my-dashboard-il25.onrender.com/auth/google/callback"
 },
     async (accessToken, refreshToken, profile, done) => {
 
