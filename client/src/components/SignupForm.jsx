@@ -179,6 +179,15 @@ function SignupForm() {
                 <button className="cta-button" type="submit">Register</button>
                 <p className="form-footnote text-center">Already have an account? <Link to="/login">Login</Link></p>
             </form >
+            <hr />
+            <button
+                className="btn btn-danger"
+                onClick={() => {
+                    window.location.href = "https://my-dashboard-il25.onrender.com/auth/google";
+                }}
+            >
+                Login with Google
+            </button>
 
             <div className="form-success">{successMessage}</div>
         </div >

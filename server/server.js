@@ -121,6 +121,70 @@ app.get("/health", (req, res) => {
     res.json({ status: "OK" });
 });
 
+
+/* ---------------- google auth config ---------------- */
+
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const session = require("express-session");
+
+app.use(session({
+    secret: "secretkey",
+    resave: false,
+    saveUninitialized: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// google passport.strategies
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "/auth/google/callback"
+},
+    async (accessToken, refreshToken, profile, done) => {
+
+        const email = profile.emails[0].value;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+                name: profile.displayName,
+                email,
+                password: "google-auth"
+            });
+        }
+
+        return done(null, user);
+    }
+));
+
+// Serialize
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+    const user = await User.findById(id);
+    done(null, user);
+});
+// Routes
+// start auth
+app.get("/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+// callback
+app.get("/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/login" }),
+    (req, res) => {
+        res.redirect("https://my-dashboard-six-swart.vercel.app/dashboard");
+    }
+);
+
 /* ---------------- START ---------------- */
 const PORT = process.env.PORT || 5000;
 
