@@ -22,15 +22,44 @@ function bytesToSize(bytes) {
 
 function Dashboard() {
     const navigate = useNavigate();
-    const [stats, setStats] = useState(loadDashboardStats());
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+    const [stats, setStats] = useState(loadDashboardStats());
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // ✅ GOOGLE + LOCAL STORAGE USER HANDLE
     useEffect(() => {
-        if (!user?.email) {
+        const params = new URLSearchParams(window.location.search);
+
+        const name = params.get("name");
+        const email = params.get("email");
+
+        if (name && email) {
+            const userData = { name, email };
+
+            localStorage.setItem("user", JSON.stringify(userData));
+            setUser(userData);
+
+            // clean URL
+            window.history.replaceState({}, document.title, "/dashboard");
+        } else {
+            const stored = localStorage.getItem("user");
+            if (stored) {
+                setUser(JSON.parse(stored));
+            }
+        }
+
+        setLoading(false);
+    }, []);
+
+    // ✅ SAFE REDIRECT (NO INSTANT BUG)
+    useEffect(() => {
+        if (!loading && !user?.email) {
             navigate('/login');
         }
-    }, [navigate, user]);
+    }, [loading, user, navigate]);
 
+    // ✅ FETCH METRICS
     useEffect(() => {
         const fetchStats = async () => {
             try {
@@ -57,14 +86,22 @@ function Dashboard() {
                 fetchStats();
             }
         };
+
         window.addEventListener('focus', refreshStats);
         return () => window.removeEventListener('focus', refreshStats);
+
     }, [user]);
 
+    // ✅ LOGOUT
     const handleLogout = () => {
         localStorage.removeItem('user');
         navigate('/login');
     };
+
+    // ✅ LOADING STATE (IMPORTANT)
+    if (loading) {
+        return <h2>Loading...</h2>;
+    }
 
     const metrics = [
         { label: 'Converted Images', value: stats.convertedImages.toLocaleString(), change: `${stats.convertedImages > 0 ? '+' + Math.min(99, Math.round((stats.convertedImages / 10) || 1)) + '% this month' : '+0% this month'}`, icon: '🔄', accent: '#6366f1' },
@@ -76,11 +113,12 @@ function Dashboard() {
     return (
         <div className="app-container">
             <Sidebar user={user} onLogout={handleLogout} />
+
             <main className="main-content">
                 <div className="header">
                     <div>
-                        <h1>Media Toolbox</h1>
-                        <p>Convert, compress, and edit your images, documents, and media files instantly.</p>
+                        <h1>Welcome {user?.name} 👋</h1>
+                        <p>Convert, compress, and edit your media files instantly.</p>
                     </div>
                 </div>
 
@@ -99,71 +137,16 @@ function Dashboard() {
 
                 <div className="content-grid">
                     <section className="chart-container">
-                        <div className="chart-header">
-                            <h2>Conversion Activity</h2>
-                            <p className="chart-subtitle">Files processed over the last 30 days</p>
-                        </div>
-                        <div className="chart-placeholder">
-                            <div className="bar-chart">
-                                <div className="bar" style={{ height: '40%' }}></div>
-                                <div className="bar" style={{ height: '55%' }}></div>
-                                <div className="bar" style={{ height: '70%' }}></div>
-                                <div className="bar" style={{ height: '50%' }}></div>
-                                <div className="bar" style={{ height: '80%' }}></div>
-                                <div className="bar" style={{ height: '65%' }}></div>
-                                <div className="bar" style={{ height: '75%' }}></div>
-                            </div>
-                        </div>
+                        <h2>Conversion Activity</h2>
                     </section>
 
                     <section className="activity-container">
-                        <div className="activity-header">
-                            <h2>Advertisement</h2>
-                            <p className="activity-subtitle">Sponsored Content</p>
-                        </div>
-                        <div className="ad-placeholder">
-                            <div className="ad-content">
-                                <div className="ad-text">
-                                    <p>Google Ad Placeholder</p>
-                                    <small>Your ad could be here</small>
-                                </div>
-                                <div className="ad-badge">AD</div>
-                            </div>
-                        </div>
+                        <h2>Advertisement</h2>
                     </section>
                 </div>
-
-                <section className="tools-section">
-                    <div className="tools-header">
-                        <h2>Popular Tools</h2>
-                        <a href="#" className="explore-link">Explore all →</a>
-                    </div>
-                    <div className="tools-grid">
-                        <div className="tool-card">
-                            <span className="tool-icon">🗜️</span>
-                            <h3>Image Compressor</h3>
-                            <p>Reduce image size while maintaining quality.</p>
-                        </div>
-                        <div className="tool-card">
-                            <span className="tool-icon">🔄</span>
-                            <h3>Format Converter</h3>
-                            <p>Convert between PNG, JPG, WebP, and more.</p>
-                        </div>
-                        <div className="tool-card">
-                            <span className="tool-icon">📐</span>
-                            <h3>Image Resizer</h3>
-                            <p>Scale images to any dimension instantly.</p>
-                        </div>
-                        <div className="tool-card">
-                            <span className="tool-icon">📄</span>
-                            <h3>PDF Merger</h3>
-                            <p>Combine multiple PDF files into one.</p>
-                        </div>
-                    </div>
-                </section>
             </main>
         </div>
-    )
+    );
 }
 
-export default Dashboard
+export default Dashboard;
