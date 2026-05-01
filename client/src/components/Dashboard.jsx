@@ -38,26 +38,20 @@ function Dashboard() {
             const userData = { name, email };
 
             localStorage.setItem("user", JSON.stringify(userData));
-            setUser(userData);
 
-            // clean URL
-            window.history.replaceState({}, document.title, "/dashboard");
-        } else {
-            const stored = localStorage.getItem("user");
-            if (stored) {
-                setUser(JSON.parse(stored));
-            }
+            // 🔥 HARD FIX: reload page after saving
+            window.location.href = "/dashboard";
         }
-
-        setLoading(false);
     }, []);
 
     // ✅ SAFE REDIRECT (NO INSTANT BUG)
     useEffect(() => {
-        if (!loading && !user?.email) {
+        const stored = localStorage.getItem("user");
+
+        if (!stored) {
             navigate('/login');
         }
-    }, [loading, user, navigate]);
+    }, [navigate]);
 
     // ✅ FETCH METRICS
     useEffect(() => {
