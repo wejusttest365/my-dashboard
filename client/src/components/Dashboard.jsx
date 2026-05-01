@@ -34,7 +34,8 @@ function Dashboard() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/metrics/${user.email}`);
+                const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+                const res = await fetch(`${BASE_URL}/metrics/${user.email}`);
                 if (res.ok) {
                     const data = await res.json();
                     setStats(data.metrics);

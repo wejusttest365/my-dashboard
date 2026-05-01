@@ -137,7 +137,8 @@ function ImageConverter() {
         // Send to backend
         if (user?.email) {
             try {
-                await fetch(`http://localhost:5000/metrics/${user.email}`, {
+                const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+                await fetch(`${BASE_URL}/metrics/${user.email}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(patch)

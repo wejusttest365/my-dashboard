@@ -6,26 +6,31 @@ const bcrypt = require("bcrypt");
 const app = express();
 
 /* ---------------- TRUSTED CORS (NO CRASH VERSION) ---------------- */
+const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://my-dashboard-six-swart.vercel.app",
+    "https://my-dashboard-il25.onrender.com"
+];
+
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "https://my-dashboard-six-swart.vercel.app"
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true
 }));
-
-// IMPORTANT: preflight must be handled BEFORE routes
-app.options("*", cors());
 
 app.use(express.json());
 
 /* ---------------- MONGO SAFE CONNECT ---------------- */
-mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log("MongoDB connected"))
+const mongoUrl = process.env.MONGO_URL || process.env.MONGODB_URI || "mongodb+srv://wejusttest365_db_user:th4C9Iv0buDY1m4v@cluster0.xurandz.mongodb.net/myapp?retryWrites=true&w=majority";
+
+mongoose.connect(mongoUrl)
+    .then(() => console.log("✅ MongoDB connected successfully"))
     .catch(err => {
-        console.log("DB ERROR:", err);
+        console.log("❌ DB CONNECTION ERROR:", err.message);
+        console.log("🔍 Make sure MONGO_URL or MONGODB_URI environment variable is set on Render");
         process.exit(1);
     });
 
@@ -34,6 +39,12 @@ const UserSchema = new mongoose.Schema({
     name: String,
     email: { type: String, unique: true },
     password: String,
+    metrics: {
+        convertedImages: { type: Number, default: 0 },
+        compressedImages: { type: Number, default: 0 },
+        totalSavedBytes: { type: Number, default: 0 },
+    },
+    createdAt: { type: Date, default: Date.now },
 });
 
 const User = mongoose.model("User", UserSchema);
@@ -102,9 +113,80 @@ app.get("/", (req, res) => {
     res.send("API running 🚀");
 });
 
+/* ---------------- HEALTH CHECK ---------------- */
+app.get("/health", (req, res) => {
+    res.json({
+        status: "OK",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development"
+    });
+});
+
+/* ---------------- METRICS ENDPOINTS ---------------- */
+app.get("/metrics/:email", async (req, res) => {
+    try {
+        const { email } = req.params;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({
+            message: "Metrics retrieved",
+            metrics: user.metrics || { convertedImages: 0, compressedImages: 0, totalSavedBytes: 0 }
+        });
+
+    } catch (err) {
+        console.log("METRICS GET ERROR:", err);
+        res.status(500).json({ message: "Failed to retrieve metrics" });
+    }
+});
+
+app.post("/metrics/:email", async (req, res) => {
+    try {
+        const { email } = req.params;
+        const { convertedImages, compressedImages, totalSavedBytes } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update metrics
+        if (convertedImages !== undefined) {
+            user.metrics.convertedImages += convertedImages;
+        }
+        if (compressedImages !== undefined) {
+            user.metrics.compressedImages += compressedImages;
+        }
+        if (totalSavedBytes !== undefined) {
+            user.metrics.totalSavedBytes += totalSavedBytes;
+        }
+
+        await user.save();
+
+        res.json({
+            message: "Metrics updated",
+            metrics: user.metrics
+        });
+
+    } catch (err) {
+        console.log("METRICS POST ERROR:", err);
+        res.status(500).json({ message: "Failed to update metrics" });
+    }
+});
+
+/* ---------------- ERROR HANDLING ---------------- */
+app.use((err, req, res, next) => {
+    console.error("UNHANDLED ERROR:", err);
+    res.status(500).json({ message: "Internal server error" });
+});
+
 /* ---------------- START ---------------- */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log("Server running on", PORT);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📱 Health check: http://localhost:${PORT}/health`);
 });
